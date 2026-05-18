@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Una sorpresa para ti 💙</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky:       #c9e8f7;
+    --sky-light: #e4f4fc;
+    --sky-soft:  #f0f9ff;
+    --powder:    #daeef9;
+    --mist:      #b8dff0;
+    --deep:      #4a8aac;
+    --navy:      #2c5f7a;
+    --ink:       #1e3f52;
+    --white:     #ffffff;
+    --accent:    #7ec8e3;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sky-soft);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BLOBS DECORATIVOS ── */
+  .blob-bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .blob {
+    position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.35;
+  }
+  .blob-1 { width: 420px; height: 420px; background: var(--sky); top: -100px; left: -120px; }
+  .blob-2 { width: 350px; height: 350px; background: var(--mist); bottom: 80px; right: -100px; animation: drift 8s ease-in-out infinite alternate; }
+  .blob-3 { width: 200px; height: 200px; background: var(--powder); top: 40%; left: 60%; animation: drift 6s ease-in-out 2s infinite alternate; }
+  @keyframes drift { from { transform: translateY(0); } to { transform: translateY(30px); } }
+
+  /* ── PANTALLA BLOQUEO ── */
+  #lock-screen {
+    position: fixed; inset: 0; z-index: 200;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 2rem 1.5rem;
+    background: linear-gradient(145deg, #2c5f7a 0%, #3d7fa0 45%, #5aa0bf 100%);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+  #lock-screen.hidden { opacity: 0; transform: translateY(-20px); pointer-events: none; }
+
+  .lock-ornament {
+    width: 80px; height: 80px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    margin-bottom: 1.5rem;
+    animation: spin-pulse 3s ease-in-out infinite;
+    background: rgba(255,255,255,0.08);
+  }
+  @keyframes spin-pulse { 0%,100%{transform:scale(1) rotate(0deg)} 50%{transform:scale(1.08) rotate(5deg)} }
+
+  .lock-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 400; font-style: italic;
+    color: #fff; text-align: center; margin-bottom: 0.5rem;
+  }
+  .lock-sub {
+    font-size: 13px; color: rgba(255,255,255,0.65);
+    text-align: center; margin-bottom: 2.5rem; line-height: 1.7;
+    letter-spacing: 0.02em;
+  }
+
+  .cd-grid {
+    display: grid; grid-template-columns: repeat(4, 72px);
+    gap: 10px; margin-bottom: 2.5rem;
+  }
+  .cd-box {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px; padding: 16px 6px 12px;
+    text-align: center; backdrop-filter: blur(8px);
+  }
+  .cd-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 38px; font-weight: 300; color: #fff;
+    display: block; line-height: 1; letter-spacing: -0.02em;
+  }
+  .cd-label {
+    font-size: 9px; color: rgba(255,255,255,0.55);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-top: 5px;
+  }
+  .lock-hint {
+    font-size: 12px; color: rgba(255,255,255,0.45);
+    text-align: center; font-style: italic;
+  }
+
+  /* ── CONTENEDOR PRINCIPAL ── */
+  #invitation {
+    display: none; position: relative; z-index: 1;
+    max-width: 480px; margin: 0 auto;
+    padding: 2rem 1.25rem 3rem;
+  }
+  #invitation.visible { display: block; }
+
+  /* ── SECCIONES ── */
+  .section { display: none; animation: fade-up 0.6s ease both; }
+  .section.active { display: block; }
+  @keyframes fade-up { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+  /* ── SEC 1: Bienvenida ── */
+  .header-tag {
+    text-align: center; margin-bottom: 0.5rem;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--deep); font-weight: 500;
+  }
+  .inv-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 42px; font-weight: 300; font-style: italic;
+    color: var(--ink); text-align: center;
+    line-height: 1.15; margin-bottom: 2rem;
+  }
+
+  /* Foto */
+  .photo-frame {
+    position: relative; width: 100%;
+    border-radius: 24px; overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 40px rgba(74,138,172,0.18);
+    aspect-ratio: 4/3;
+    background: var(--powder);
+  }
+  .photo-frame img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    /* =====================================================
+       👇 REEMPLAZA src con el enlace de tu propia foto
+       Ejemplo: src="https://mi-foto.com/imagen.jpg"
+       ===================================================== */
+  }
+  .photo-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(44,95,122,0.35) 0%, transparent 50%);
+  }
+  .photo-label {
+    position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+    background: rgba(255,255,255,0.88); backdrop-filter: blur(8px);
+    color: var(--navy); font-size: 12px; font-weight: 500;
+    padding: 6px 16px; border-radius: 30px; white-space: nowrap;
+    letter-spacing: 0.03em;
+  }
+
+  /* Tarjeta detalles */
+  .card {
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(180,220,240,0.6);
+    border-radius: 20px; padding: 1.5rem 1.25rem;
+    backdrop-filter: blur(12px);
+    margin-bottom: 1.75rem;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px; font-weight: 500; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--deep);
+    margin-bottom: 1rem; text-align: center;
+  }
+  .detail-row {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(180,220,240,0.4);
+    font-size: 14px;
+  }
+  .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .d-icon { font-size: 17px; flex-shrink: 0; width: 22px; margin-top: 1px; }
+  .d-key { color: var(--deep); font-weight: 500; min-width: 60px; font-size: 13px; }
+  .d-val { color: var(--ink); line-height: 1.5; }
+
+  /* Botón */
+  .btn {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--deep) 100%);
+    color: #fff; border: none; border-radius: 50px;
+    padding: 15px 24px; font-size: 15px; font-weight: 400;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; letter-spacing: 0.03em;
+    transition: transform 0.18s, opacity 0.18s, box-shadow 0.18s;
+    box-shadow: 0 6px 24px rgba(44,95,122,0.25);
+    text-align: center;
+  }
+  .btn:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(44,95,122,0.3); }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-ghost {
+    display: block; width: 100%;
+    background: transparent;
+    border: 1px solid var(--mist);
+    color: var(--navy); border-radius: 50px;
+    padding: 13px 24px; font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; letter-spacing: 0.02em;
+    transition: background 0.2s;
+    text-align: center; margin-top: 12px;
+  }
+  .btn-ghost:hover { background: var(--powder); }
+
+  /* Dots */
+  .dots { display: flex; gap: 7px; justify-content: center; margin-top: 1.75rem; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--mist); transition: all 0.3s; }
+  .dot.active { background: var(--navy); width: 22px; border-radius: 4px; }
+
+  /* ── SEC 2: Antojos ── */
+  .section-header { text-align: center; margin-bottom: 1.75rem; }
+  .section-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 34px; font-weight: 400; font-style: italic;
+    color: var(--ink); margin-bottom: 0.4rem;
+  }
+  .section-header p { font-size: 13px; color: var(--deep); }
+
+  .food-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 1.5rem;
+  }
+  .food-card {
+    background: rgba(255,255,255,0.7);
+    border: 1.5px solid rgba(180,220,240,0.5);
+    border-radius: 18px; padding: 22px 12px 16px;
+    text-align: center; cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.18s, box-shadow 0.2s;
+    user-select: none; backdrop-filter: blur(8px);
+    position: relative;
+  }
+  .food-card:hover {
+    border-color: var(--accent);
+    background: rgba(201,232,247,0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(74,138,172,0.15);
+  }
+  .food-card.selected {
+    border-color: var(--navy);
+    background: rgba(184,223,240,0.4);
+    box-shadow: 0 0 0 3px rgba(74,138,172,0.2);
+  }
+  .food-card.selected::after {
+    content: '✓';
+    position: absolute; top: 10px; right: 12px;
+    font-size: 12px; color: var(--navy); font-weight: 500;
+  }
+  .f-icon { font-size: 34px; margin-bottom: 8px; }
+  .f-name { font-size: 12px; color: var(--ink); font-weight: 500; line-height: 1.4; }
+
+  .hint-txt {
+    text-align: center; font-size: 12px; color: var(--accent);
+    margin-bottom: 1.25rem; min-height: 18px; transition: color 0.3s;
+  }
+
+  /* ── SEC 3: Confirmación ── */
+  .success-wrap { text-align: center; padding: 1rem 0; }
+  .success-bubble {
+    width: 90px; height: 90px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sky), var(--powder));
+    border: 2px solid var(--mist);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; margin: 0 auto 1.5rem;
+    animation: pop 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
+  }
+  @keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+
+  .success-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px; font-weight: 400; font-style: italic;
+    color: var(--ink); margin-bottom: 0.75rem;
+  }
+  .success-msg {
+    font-size: 14px; color: var(--deep); line-height: 1.8;
+    margin-bottom: 2rem;
+  }
+  .summary-card {
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(180,220,240,0.55);
+    border-radius: 20px; padding: 1.5rem 1.25rem;
+    text-align: left; margin-bottom: 1.75rem;
+    backdrop-filter: blur(12px);
+  }
+  .sum-head {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--deep); font-weight: 500; margin-bottom: 1rem;
+  }
+  .sum-row { font-size: 13px; color: var(--ink); padding: 5px 0; display: flex; align-items: center; gap: 10px; }
+  .sum-food-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(180,220,240,0.4); }
+  .sum-food-label { font-size: 11px; color: var(--deep); margin-bottom: 6px; letter-spacing: 0.05em; }
+  .sum-food-val { font-size: 14px; color: var(--navy); font-weight: 500; line-height: 1.5; }
+
+  .confetti-line {
+    font-size: 13px; color: var(--deep); font-style: italic; line-height: 1.7;
+  }
+
+  /* Separador decorativo */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 1.5rem 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: rgba(180,220,240,0.5); }
+  .divider-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--mist); }
+</style>
+</head>
+<body>
+
+<div class="blob-bg">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+
+<!-- ══ PANTALLA DE BLOQUEO ══ -->
+<div id="lock-screen">
+  <div class="lock-ornament">🔒</div>
+  <h1 class="lock-title">Algo especial se acerca…</h1>
+  <p class="lock-sub">
+    Falta muy poco para descubrir<br>una sorpresa pensada para ti 💙
+  </p>
+  <div class="cd-grid">
+    <div class="cd-box"><span class="cd-num" id="cd-d">00</span><span class="cd-label">Días</span></div>
+    <div class="cd-box"><span class="cd-num" id="cd-h">00</span><span class="cd-label">Horas</span></div>
+    <div class="cd-box"><span class="cd-num" id="cd-m">00</span><span class="cd-label">Min</span></div>
+    <div class="cd-box"><span class="cd-num" id="cd-s">00</span><span class="cd-label">Seg</span></div>
+  </div>
+  <p class="lock-hint">✦ Se revela el sábado 23 de mayo a las 00:00 ✦</p>
+</div>
+
+<!-- ══ INVITACIÓN ══ -->
+<div id="invitation">
+
+  <!-- SEC 1: Bienvenida -->
+  <div class="section active" id="sec1">
+    <p class="header-tag">✦ Una invitación especial ✦</p>
+    <h1 class="inv-title">¡Tenemos<br>una cita!</h1>
+
+    <div class="photo-frame">
+      <!-- =====================================================
+           👇 REEMPLAZA el src con el enlace de tu propia foto
+           Ejemplo: src="https://mi-foto.com/imagen.jpg"
+           ===================================================== -->
+      <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80" alt="Foto especial">
+      <div class="photo-overlay"></div>
+      <div class="photo-label">💙 Para ti, con cariño</div>
+    </div>
+
+    <div class="card">
+      <p class="card-title">✦ Los detalles ✦</p>
+      <div class="detail-row">
+        <span class="d-icon">📅</span>
+        <span class="d-key">Fecha</span>
+        <span class="d-val">29 de mayo del 2026</span>
+      </div>
+      <div class="detail-row">
+        <span class="d-icon">⏰</span>
+        <span class="d-key">Hora</span>
+        <span class="d-val">A partir de las 11:00 a.m.</span>
+      </div>
+      <div class="detail-row">
+        <span class="d-icon">📍</span>
+        <span class="d-key">Lugar</span>
+        <span class="d-val">Te recogeré en tu casita uu</span>
+      </div>
+      <div class="detail-row">
+        <span class="d-icon">👗</span>
+        <span class="d-key">Look</span>
+        <span class="d-val">Ropa casual — ven cómoda y lista para pasarla bien</span>
+      </div>
+    </div>
+
+    <button class="btn" onclick="goTo(2)">¡Aceptar y elegir comida! 🍽️</button>
+
+    <div class="dots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- SEC 2: Antojos -->
+  <div class="section" id="sec2">
+    <div class="section-header">
+      <h2>¿Qué se te antojaría?</h2>
+      <p>Elige una o más opciones — prometo tomar nota</p>
+    </div>
+
+    <div class="food-grid">
+      <div class="food-card" data-food="🍔 Hamburguesas / Fast Food" onclick="toggleFood(this)">
+        <div class="f-icon">🍔</div>
+        <div class="f-name">Hamburguesas<br>/ Fast Food</div>
+      </div>
+      <div class="food-card" data-food="🍝 Comida Italiana (Pastas / Pizza)" onclick="toggleFood(this)">
+        <div class="f-icon">🍝</div>
+        <div class="f-name">Italiana<br>(Pastas / Pizza)</div>
+      </div>
+      <div class="food-card" data-food="🐟 Ceviche" onclick="toggleFood(this)">
+        <div class="f-icon">🐟</div>
+        <div class="f-name">Ceviche</div>
+      </div>
+      <div class="food-card" data-food="🍲 Comida Criolla / Local" onclick="toggleFood(this)">
+        <div class="f-icon">🍲</div>
+        <div class="f-name">Comida Criolla<br>/ Local</div>
+      </div>
+    </div>
+
+    <p class="hint-txt" id="food-hint">Selecciona al menos una opción 💙</p>
+    <button class="btn" onclick="confirmFood()">Confirmar cita 💌</button>
+    <button class="btn-ghost" onclick="goTo(1)">← Volver</button>
+
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot active"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- SEC 3: Confirmación -->
+  <div class="section" id="sec3">
+    <div class="success-wrap">
+      <div class="success-bubble">🥳</div>
+      <h2 class="success-title">¡Está confirmada!</h2>
+      <p class="success-msg">
+        Todo anotado para nuestra cita.<br>
+        ¡Nos vemos muy pronto! 💙
+      </p>
+
+      <div class="summary-card">
+        <p class="sum-head">✦ Resumen de tu cita ✦</p>
+        <div class="sum-row">📅 <span>29 de mayo del 2026</span></div>
+        <div class="sum-row">⏰ <span>A partir de las 11:00 a.m.</span></div>
+        <div class="sum-row">📍 <span>Te recojo en tu casita</span></div>
+        <div class="sum-food-section">
+          <p class="sum-food-label">Tu antojo elegido:</p>
+          <p class="sum-food-val" id="food-summary">—</p>
+        </div>
+      </div>
+
+      <div class="divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+
+      <p class="confetti-line">
+        ¡Ya tengo todo planeado para ti! 🎉<br>
+        Guarda esta pantalla para recordar los detalles.
+      </p>
+    </div>
+
+    <div class="dots" style="margin-top:2rem;">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot active"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── Fecha de desbloqueo: sábado 23 de mayo 2026, 00:00 ──
+  // Para probar en fecha anterior, cambia a: new Date(Date.now() - 60000)
+  const UNLOCK = new Date(Date.now() - 60000);
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function tick(){
+    const diff = UNLOCK - new Date();
+    if(diff <= 0){ unlock(); return; }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('cd-d').textContent = pad(d);
+    document.getElementById('cd-h').textContent = pad(h);
+    document.getElementById('cd-m').textContent = pad(m);
+    document.getElementById('cd-s').textContent = pad(s);
+  }
+
+  function unlock(){
+    clearInterval(timer);
+    const ls = document.getElementById('lock-screen');
+    ls.classList.add('hidden');
+    setTimeout(() => {
+      ls.style.display = 'none';
+      document.getElementById('invitation').classList.add('visible');
+    }, 1000);
+  }
+
+  tick();
+  const timer = setInterval(tick, 1000);
+  if(new Date() >= UNLOCK) unlock();
+
+  function goTo(n){
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    const sec = document.getElementById('sec'+n);
+    sec.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  let selected = [];
+
+  function toggleFood(el){
+    const food = el.dataset.food;
+    if(el.classList.contains('selected')){
+      el.classList.remove('selected');
+      selected = selected.filter(f => f !== food);
+    } else {
+      el.classList.add('selected');
+      selected.push(food);
+    }
+    const hint = document.getElementById('food-hint');
+    if(selected.length > 0){
+      hint.textContent = '¡Buena elección! Ya casi terminamos 😍';
+      hint.style.color = 'var(--navy)';
+    } else {
+      hint.textContent = 'Selecciona al menos una opción 💙';
+      hint.style.color = '';
+    }
+  }
+
+  function confirmFood(){
+    if(selected.length === 0){
+      const hint = document.getElementById('food-hint');
+      hint.textContent = '¡Elige algo primero! 🙈';
+      hint.style.color = '#c0392b';
+      setTimeout(() => {
+        hint.textContent = 'Selecciona al menos una opción 💙';
+        hint.style.color = '';
+      }, 2000);
+      return;
+    }
+    document.getElementById('food-summary').textContent = selected.join('\n');
+    document.getElementById('food-summary').style.whiteSpace = 'pre-line';
+    goTo(3);
+  }
+</script>
+
+</body>
+</html>
