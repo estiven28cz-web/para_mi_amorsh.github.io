@@ -342,7 +342,7 @@
            👇 REEMPLAZA el src con el enlace de tu propia foto
            Ejemplo: src="https://mi-foto.com/imagen.jpg"
            ===================================================== -->
-      <img src="https://i.imgur.com/1WFq8ob.jpeg" alt="Foto especial">
+      <img src="https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=800&q=80" alt="Foto especial">
       <div class="photo-overlay"></div>
       <div class="photo-label">💙 Para ti, con cariño</div>
     </div>
@@ -457,7 +457,7 @@
 
 <script>
   // ── Fecha de desbloqueo: sábado 23 de mayo 2026, 00:00 ──
-  // Para probar en fecha anterior, cambia a: new Date(Date.now() - 60000)
+  // Para probar, cambia a: new Date(Date.now() - 60000)
   const UNLOCK = new Date('2026-05-23T00:00:00');
 
   function pad(n){ return String(n).padStart(2,'0'); }
@@ -487,6 +487,7 @@
 
   tick();
   const timer = setInterval(tick, 1000);
+  if(new Date() >= UNLOCK) unlock();
 
   function goTo(n){
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -530,6 +531,13 @@
     document.getElementById('food-summary').textContent = selected.join('\n');
     document.getElementById('food-summary').style.whiteSpace = 'pre-line';
     goTo(3);
+
+    // Enviar respuesta por WhatsApp
+    const comida = selected.join(', ');
+    const mensaje = encodeURIComponent(`💙 ¡Confirmé la cita! Me antoja: ${comida} 🍽️`);
+    setTimeout(() => {
+      window.open(`https://wa.me/51906586013?text=${mensaje}`, '_blank');
+    }, 1500);
   }
 </script>
 
