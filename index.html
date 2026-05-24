@@ -458,18 +458,13 @@
 <script>
   // ── Fecha de desbloqueo: sábado 23 de mayo 2026, 00:00 ──
   // Para probar en fecha anterior, cambia a: new Date(Date.now() - 60000)
-  const UNLOCK = new Date('2026-05-23T23:00:00');
+  const UNLOCK = new Date(Date.now() + 600000);
 
   function pad(n){ return String(n).padStart(2,'0'); }
 
- function tick(){
+  function tick(){
     const diff = UNLOCK - new Date();
-    
-    if(diff <= 0){ 
-      unlock(); 
-      return; 
-    }
-   
+    if(diff <= 0){ unlock(); return; }
     const d = Math.floor(diff / 86400000);
     const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
