@@ -462,9 +462,14 @@
 
   function pad(n){ return String(n).padStart(2,'0'); }
 
-  function tick(){
+ function tick(){
     const diff = UNLOCK - new Date();
-    if(diff <= 0){ unlock(); return; }
+    
+    if(diff <= 0){ 
+      unlock(); 
+      return; 
+    }
+   
     const d = Math.floor(diff / 86400000);
     const h = Math.floor((diff % 86400000) / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
